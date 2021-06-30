@@ -59,44 +59,33 @@ class TicketSecurity {
         $sql .= " `qrcode_file` varchar(250) NOT NULL, ";
         $sql .= " PRIMARY KEY `ticket_id` (`id`) ";
         $sql .= ") ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
-
         // Include Upgrade Script
         require_once( ABSPATH . '/wp-admin/includes/upgrade.php' );
-
         // Create Table
         dbDelta( $sql );
 
     }
 
     public function thank_you($order_id) {
-        //create an order instance
+        //Create an order instance
         $order = wc_get_order($order_id); // return WP_Order
         $paymethod = $order->payment_method_title;
         $orderstat = $order->get_status();
-
         if ($orderstat == 'completed') {
             // Create ticket security
             $code = $this->generate_string();
             include(plugin_dir_path(__FILE__) . 'inc/phpqrcode/qrlib.php');
-
             // how to save PNG codes to server
-            $tempDir = plugin_dir_path(__FILE__) . 'qrcode';
+            $tempDir = plugin_dir_path(__FILE__) . '/qrcode';
             chmod($tempDir, 0755);
-
             $fileName = 'file_'.$code.'.png';
             $message = "Code: {$code}";
-
             $pngAbsoluteFilePath = $tempDir . '/' . $fileName;
-            $urlRelativeFilePath = plugin_dir_url(__DIR__). 'qrcode/' .$fileName;
-
+            $urlRelativeFilePath = plugin_dir_url(__DIR__).'qrcode/'.$fileName;
             // generating
             if (!file_exists($pngAbsoluteFilePath)) {
                 QRcode::png($message, $pngAbsoluteFilePath, QR_ECLEVEL_L, 4);
-
-            } else {
-                //File already generated! We can use this cached file to speed up site on common codes!
             }
-
             $his_code = $this->add_ticket_db($order_id, $code, $fileName);
             if ($his_code) {
                 $this->send_code($order_id, $his_code, $urlRelativeFilePath);
@@ -119,7 +108,6 @@ class TicketSecurity {
             $order = wc_get_order($order_id);
             $note = "Code de sécurité: {$code}";
             $order->add_order_note( $note );
-
             // Save in db
             $wpdb->insert($table, array(
                 'order_id' => $order_id,
@@ -129,12 +117,7 @@ class TicketSecurity {
             $result = &$code;
         } else {
             $row = reset($key_check_row);
-            if ($row) {
-                $result = $row->code;
-            } else {
-                $result = false;
-            }
-
+            $result = $row ? $row->code : false;
         }
         $wpdb->flush();
         return $result;
@@ -154,18 +137,13 @@ class TicketSecurity {
             'author_name' => $order->get_billing_first_name() . ' ' .$order->get_billing_last_name(),
             'total_ttc' => $order->get_total()
         ]);
-
-        // get client
-        $to_client = $order->get_billing_email();;
+        $to_client = $order->get_billing_email(); // Get client address email
         wp_mail($to_client, $sujet, $body);
-
-        // get admin
         $admin_email  = get_option('admin_email');
         if (is_email($admin_email)) {
             wp_mail($admin_email, $sujet, $body);
         }
     }
-
 }
 
 new TicketSecurity();
@@ -173,7 +151,6 @@ new TicketSecurity();
 register_activation_hook( __FILE__, function() {
     $ticket = new TicketSecurity();
     $ticket->init_db();
-    /* activation code here */
 });
 
 add_action( 'admin_enqueue_scripts', function() {
@@ -187,7 +164,6 @@ function ticket_admin_menu() {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
         }
-
         $query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}ticket_security");
         $results = $wpdb->get_results($query, OBJECT );
         $results = array_map(function($item){
@@ -202,3 +178,4 @@ function ticket_admin_menu() {
 
     } );
 }
+

@@ -2,12 +2,10 @@
 <project version="4">
   <component name="PhpIncludePathManager">
     <include_path>
-      <path value="$USER_HOME$/Documents/wordpress_sources" />
-      <path value="$PROJECT_DIR$/../woocommerce" />
-      <path value="$PROJECT_DIR$/../woocommerce-dropshipping" />
       <path value="$PROJECT_DIR$/vendor/composer" />
       <path value="$PROJECT_DIR$/vendor/liquid/liquid" />
+      <path value="D:/CREA/WORDPRESS" />
     </include_path>
   </component>
-  <component name="PhpProjectSharedConfiguration" php_language_level="7.4" />
+  <component name="PhpProjectSharedConfiguration" php_language_level="7.2" />
 </project>
