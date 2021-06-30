@@ -40,14 +40,12 @@ class TicketSecurity {
     }
 
     function init() {
-        // Le mail doit contenir un <DOCTYPE>, head, body...
         $content_type = function() { return 'text/html'; };
         add_filter( 'wp_mail_content_type', $content_type );
     }
 
     // Initialize DB Tables
     function init_db() {
-        // WP Globals
         global $table_prefix, $wpdb;
         // Customer Table
         $ticketTable = $table_prefix . 'ticket_security';
@@ -67,7 +65,6 @@ class TicketSecurity {
     }
 
     public function thank_you($order_id) {
-        //Create an order instance
         $order = wc_get_order($order_id); // return WP_Order
         $paymethod = $order->payment_method_title;
         $orderstat = $order->get_status();
@@ -75,8 +72,7 @@ class TicketSecurity {
             // Create ticket security
             $code = $this->generate_string();
             include(plugin_dir_path(__FILE__) . 'inc/phpqrcode/qrlib.php');
-            // how to save PNG codes to server
-            $tempDir = plugin_dir_path(__FILE__) . '/qrcode';
+            $tempDir = plugin_dir_path(__FILE__) . 'qrcode';
             chmod($tempDir, 0755);
             $fileName = 'file_'.$code.'.png';
             $message = "Code: {$code}";
@@ -94,7 +90,6 @@ class TicketSecurity {
                 $order->add_order_note( $note );
             }
         }
-
     }
 
     public function add_ticket_db($order_id, $code, $filename) {
@@ -108,7 +103,7 @@ class TicketSecurity {
             $order = wc_get_order($order_id);
             $note = "Code de sécurité: {$code}";
             $order->add_order_note( $note );
-            // Save in db
+            // Insert in database
             $wpdb->insert($table, array(
                 'order_id' => $order_id,
                 'code' => $code,
@@ -139,11 +134,13 @@ class TicketSecurity {
         ]);
         $to_client = $order->get_billing_email(); // Get client address email
         wp_mail($to_client, $sujet, $body);
+        // get admin contact
         $admin_email  = get_option('admin_email');
         if (is_email($admin_email)) {
             wp_mail($admin_email, $sujet, $body);
         }
     }
+
 }
 
 new TicketSecurity();
@@ -151,6 +148,7 @@ new TicketSecurity();
 register_activation_hook( __FILE__, function() {
     $ticket = new TicketSecurity();
     $ticket->init_db();
+    /* activation code here */
 });
 
 add_action( 'admin_enqueue_scripts', function() {
@@ -164,6 +162,7 @@ function ticket_admin_menu() {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
         }
+
         $query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}ticket_security");
         $results = $wpdb->get_results($query, OBJECT );
         $results = array_map(function($item){
@@ -177,5 +176,100 @@ function ticket_admin_menu() {
         echo $engine->parseFile('admin_menu_content')->render(['tickets' => $results]);
 
     } );
+}
+
+
+/**
+ * Add extra dropdowns to the List Tables
+ *
+ * @param required string $post_type    The Post Type that is being displayed
+ */
+add_action('restrict_manage_posts', 'add_extra_tablenav');
+function add_extra_tablenav($post_type){
+    global $wp_query;
+    /** Ensure this is the correct Post Type*/
+    if($post_type !== 'product') return;
+    $results = get_posts(['post_type' => 'former', 'numberposts' => -1]);
+    if(empty($results)) return;
+    // get selected option if there is one selected
+    if (isset( $_GET['former-name'] ) && $_GET['former-name'] != '') {
+        $selectedName = $_GET['former-name'];
+    } else {
+        $selectedName = -1;
+    }
+    /** Grab all of the options that should be shown */
+    $options[] = sprintf('<option value="0">%1$s</option>', __('All former', 'your-text-domain'));
+    foreach($results as $result) :
+        if ($result->ID == $selectedName) {
+            $options[] = sprintf('<option value="%1$s" selected>%2$s</option>', esc_attr($result->ID), $result->post_title);
+        } else {
+            $options[] = sprintf('<option value="%1$s">%2$s</option>', esc_attr($result->ID), $result->post_title);
+        }
+    endforeach;
+    /** Output the dropdown menu */
+    echo '<select id="former-name" name="former-name">';
+    echo join("\n", $options);
+    echo '</select>';
+}
+
+add_filter( 'parse_query', 'filter_request_product_query' , 10);
+function filter_request_product_query($query){
+    //modify the query only if it admin and main query.
+    if ( !(is_admin() AND $query->is_main_query()) ){
+        return $query;
+    }
+    //we want to modify the query for the targeted custom post and filter option
+    if ( !('product' === $query->query['post_type'] AND isset($_REQUEST['former-name']) ) ){
+        return $query;
+    }
+    //for the default value of our filter no modification is required
+    if (0 == $_REQUEST['former-name']){
+        return $query;
+    }
+    //modify the query_vars.
+    if ( ! $query->get( 'meta_query' )) {
+        $query->set( 'meta_query', [
+            [
+                'key'     => 'former',
+                'value'   => $_REQUEST['former-name'],
+                'compare' => '='
+            ]
+        ] );
+
+    }
+    return $query;
+}
+
+/**
+ * The hooks to create custom columns and their associated data for a custom post type are
+ * manage_{$post_type}_posts_columns and manage_{$post_type}_posts_custom_column respectively,
+ * where {$post_type} is the name of the custom post type.
+ */
+
+// Add the custom columns to the book post type:
+add_filter( 'manage_product_posts_columns', 'set_custom_edit_book_columns' );
+function set_custom_edit_book_columns($columns) {
+    unset( $columns['author'] );
+    $columns['former'] = 'Formateur';
+    return $columns;
+}
+
+// Add the data to the custom columns for the book post type:
+add_action( 'manage_product_posts_custom_column' , 'custom_book_column', 10, 2 );
+function custom_book_column( $column, $post_id ) {
+    switch ( $column ) {
+
+        case 'former' :
+            $former_id = get_post_meta($post_id,'former', true);
+            if ( $former_id ):
+                $former_id = intval($former_id);
+                $former_post = get_post($former_id);
+                echo $former_post->post_title;
+            else:
+                _e( 'Unable to get former(s)', 'ticket-falicrea' );
+            endif;
+
+            break;
+    }
 }
 
