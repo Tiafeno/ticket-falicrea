@@ -11,6 +11,7 @@ License: A "Slug" license name e.g. GPL2
 */
 
 include plugin_dir_path(__FILE__) . 'vendor/autoload.php';
+include plugin_dir_path(__FILE__) . 'inc/former-details.php';
 
 use Liquid\Template;
 use Liquid\Cache\Local;
