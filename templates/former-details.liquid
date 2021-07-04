@@ -6,7 +6,102 @@
 
 <script type="text/x-template" id="details">
     <div class="former-details">
+        <table class="ui compact celled definition table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Designation</th>
+                    <th>SKU</th>
+                    <th>Prix Unitaire</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr v-for="product in products" :key="product.id">
+                    <td class="collapsing">
+                        <div class="ui fitted slider checkbox">
+                            <input type="checkbox"> <label></label>
+                        </div>
+                    </td>
+                    <td>${product.name}</td>
+                    <td>${product.sku}</td>
+                    <td v-html="product.price_html"></td>
+                    <td>
+                        <router-link class="ui small button" :to="{name: 'TrainingDetails', params: {id: product.id}}">Details</router-link>
+                    </td>
+                </tr>
+            </tbody>
+
+            <tfoot class="full-width">
+                <tr>
+                    <th></th>
+                    <th colspan="4">
+                        <a :href="postNew" class="ui right floated small secondary labeled icon button">
+                            <i class="user icon"></i> Ajouter une formation
+                        </a>
+                        <div class="ui small button">
+                            Approve
+                        </div>
+                        <div class="ui small  disabled button">
+                            Approve All
+                        </div>
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
     </div>
+</script>
+<script type="text/x-template" id="training-details">
+<div class="former-details">
+    <div class=""></div>
+    <router-link class="ui primary labeled icon button" :to="{name: 'FormerDetails'}">
+        <i class="chevron left icon"></i>
+        Retour
+    </router-link>
+    <div class="ui medium header" v-if="Product !== null">
+        ${Product.title.rendered}
+    </div>
+    <table class="ui compact celled definition table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Client</th>
+                <th>Code</th>
+                <th>Prix</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr v-for="item in items">
+                <td class="collapsing">
+                    <div class="ui fitted slider checkbox">
+                        <input type="checkbox"> <label></label>
+                    </div>
+                </td>
+                <td><b>${item.customer.first_name} ${item.customer.last_name}</b> - <i>${item.customer.email}</i></td>
+                <td>${item.code}</td>
+                <td><span v-html="item.totalTTC"></span><span> ${currency}</span></td>
+                <td><a class="preview button" target="_blank" :href="item.order_url">Voir commande</a></td>
+            </tr>
+        </tbody>
+
+        <tfoot class="full-width">
+            <tr>
+                <th></th>
+                <th colspan="4">
+                    <div class="ui right floated small secondary  button">
+                        ${TotalTTC} ${currency}
+                    </div>
+                    <div class="ui small button">
+                        TOTAL TTC
+                    </div>
+                </th>
+            </tr>
+        </tfoot>
+    </table>
+</div>
 </script>
 
 <div id="former-details-app">

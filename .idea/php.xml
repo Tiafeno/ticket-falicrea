@@ -5,6 +5,7 @@
       <path value="$PROJECT_DIR$/vendor/composer" />
       <path value="$PROJECT_DIR$/vendor/liquid/liquid" />
       <path value="D:/CREA/WORDPRESS" />
+      <path value="$PROJECT_DIR$/../woocommerce" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.2" />
