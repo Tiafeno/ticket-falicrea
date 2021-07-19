@@ -48,14 +48,25 @@
                 return {
                     TotalTTC: 0,
                     Product : null,
+                    Month: [],
+                    Years: [],
                     currency: apiSettings.currency,
                     items: [],
+                    filters: {
+                        month: 1,
+                        year: 0
+                    }
                 }
             },
             mounted: function () {
                 var self = this;
                 var product_id = this.$route.params.id;
                 var data = new FormData();
+                var objDate = new Date();
+                this.Month = ['Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 
+                'Aout', 'Septembre', 'Octobre', 'November', 'Decembre'];
+                this.Years = lodash.range(2020, objDate.getFullYear());
+                this.filters.year = objDate.getFullYear();
                 data.append('action', 'action_get_product_details');
                 data.append('product_id', product_id);
                 this.$parent.axiosInstance.post('', data).then(function(resp) {
@@ -65,16 +76,15 @@
                         self.items = lodash.clone(response.data);
                     }
                 });
-
                 var product = new wp.api.models.Product( {id: product_id });
                 product.fetch().done(function(prod) {
                     self.Product = lodash.clone(prod);
                 });
-
-
             },
-            created: function() {
+            methods: {
+                filterDate: function (evt) {
 
+                }
             }
         };
 

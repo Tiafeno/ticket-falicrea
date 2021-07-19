@@ -18,6 +18,7 @@ final class FormerDetailsClass {
     }
 
     public function add_former_meta_boxes() {
+        // Only for former post type...
         if (post_type_exists('former')) {
             add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
             add_meta_box(
@@ -118,6 +119,7 @@ WHERE post.post_type = %s AND meta.meta_value LIKE %s AND meta.meta_key = %s";
         $wpdb->flush();
         wp_send_json_success($responses);
     }
+
 
     public function get_product_details() {
         global $wpdb;
