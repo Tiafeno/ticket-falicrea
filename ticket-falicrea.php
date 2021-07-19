@@ -94,7 +94,6 @@ class TicketSecurity {
             $qrcode_url = $this->generateQRCodeURL($result->qrcode_file);
             $this->send_code($order_id, $result->code, $qrcode_url, true);
         }
-
     }
 
     // Initialize DB Tables
@@ -248,14 +247,15 @@ class TicketSecurity {
             'currency'     => get_woocommerce_currency_symbol(),
             'total_ttc'    => $order->get_total()
         ]);
+        $headers[] = 'From: Ma Formation Store <no-reply@maformation-store.net>';
         $to_client = $order->get_billing_email(); // Get client address email
-        wp_mail($to_client, $sujet, $body);
+        wp_mail($to_client, $sujet, $body, $headers);
         // Verifier si le mail est pour le client seulement
         if ($for_client_only) return;
         // get admin contact
         $admin_email  = get_option('admin_email');
         if (is_email($admin_email)) {
-            wp_mail($admin_email, $sujet, $body);
+            wp_mail($admin_email, $sujet, $body, $headers);
         }
         $former_id = $this->get_training_former_id($item_product_id);
         if ($former_id):
@@ -268,12 +268,13 @@ class TicketSecurity {
         $former_email = get_post_meta( $former_id,  'email', true );
         // Verify is correct email address
         if (is_email($former_email)) {
+            $headers[] = 'From: Ma Formation Store <no-reply@maformation-store.net>';
             $message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam ut leo nisl. 
             Etiam sit amet purus maximus, finibus arcu ut, venenatis dui. In vehicula magna quis vestibulum rutrum. 
             Nulla eget sollicitudin lacus. Maecenas consequat mi et pretium semper. Nam posuere imperdiet metus quis posuere. 
             Ut at libero sit amet odio facilisis eleifend blandit vel nibh. Praesent eu neque id leo cursus pharetra non ut ex.";
             $objet_email = "Achat de formation: " . $product->get_title();
-            wp_mail( $former_email, $objet_email, $message );
+            wp_mail( $former_email, $objet_email, $message, $headers);
         }
     }
 }
