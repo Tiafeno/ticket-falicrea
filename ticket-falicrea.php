@@ -63,7 +63,7 @@ class TicketSecurity {
         $body = '<input type="hidden" name="rsend_nonce" value="' . wp_create_nonce() . '">';
         $body .= '<select name="code_action" style="border: 4px solid #007cba;">
                     <option value="">Choisissez une action…</option>
-                    <option value="send_order_code">E-mail de code de securité / détails de la commande au client</option>
+                    <option value="send_order_code">E-mail de code de securité</option>
                 </select>';
         echo $body;
     }
@@ -148,7 +148,7 @@ class TicketSecurity {
             }
             $his_code = $this->add_ticket_db($order_id, $code, $fileName);
             if ($his_code) {
-                $this->send_code($order_id, $his_code, $urlRelativeFilePath);
+                $this->send_code($order_id, $code, $urlRelativeFilePath);
             } else {
                 $note = "Une erreur c'est produit dans la base de donnée. Veuillez contacter l'administrateur";
                 $order->add_order_note( $note );
@@ -268,6 +268,7 @@ class TicketSecurity {
         $former_email = get_post_meta( $former_id,  'email', true );
         // Verify is correct email address
         if (is_email($former_email)) {
+            // TODO: Mail for former
             $headers[] = 'From: Ma Formation Store <no-reply@maformation-store.net>';
             $message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam ut leo nisl. 
             Etiam sit amet purus maximus, finibus arcu ut, venenatis dui. In vehicula magna quis vestibulum rutrum. 
