@@ -299,17 +299,21 @@ function ticket_admin_menu() {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
         }
-        $query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}ticket_security");
+        $table = $wpdb->prefix .'ticket_security';
+        $query = "SELECT * FROM $table";
         $results = $wpdb->get_results($query, OBJECT );
-        $results = array_map(function($item){
-            $order = wc_get_order(intval($item->order_id));
-            $item->date = $order->get_date_created();
-            $item->order_url = $order->get_edit_order_url();
-            $item->author_name = $order->get_billing_first_name() . ' ' .$order->get_billing_last_name();
-            $item->author_email = $order->get_billing_email();
-            return $item;
-        }, $results);
-        echo $engine->parseFile('admin_menu_content')->render(['tickets' => $results]);
+        $tickets = [];
+        foreach ($results as $result) {
+            $order = wc_get_order(intval($result->order_id));
+            if (empty($order)) continue;
+
+            $result->date = $order->get_date_created();
+            $result->order_url = $order->get_edit_order_url();
+            $result->author_name = $order->get_billing_first_name() . ' ' .$order->get_billing_last_name();
+            $result->author_email = $order->get_billing_email();
+            $tickets[] = $result;
+        }
+        echo $engine->parseFile('admin_menu_content')->render(['tickets' => $tickets]);
     } );
 }
 
