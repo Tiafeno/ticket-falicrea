@@ -79,7 +79,7 @@
                                     <option v-for="(year, index) in Years" :value="year"> ${year} </option>
                                 </select>
                                 <button type="button" @click="filterDate($event)" class="ui small button">Trouver</button>
-                                <button type="button" @click="exportToExcel('xlsx')" class="ui small button">Exporter vers Excel</button>
+                                <button type="button" @click="exportToExcel('xlsx')" class="ui secondary small button">Exporter vers Excel</button>
                             </form>
                         </div>
                     </td>
@@ -97,7 +97,6 @@
                     <th>Date de commande</th>
                     <th>Date de livraison</th>
                     <th>Prix</th>
-                    <th></th>
                 </tr>
             </thead>
 
@@ -106,11 +105,10 @@
                 {% comment %} for item {% endcomment %}
                 <tr v-for="item in items">
                     <td><b>${item.customer.full_name}</b> - <i>${item.customer.email}</i></td>
-                    <td>${item.code}</td>
+                    <td><a class="preview button" title="Voir commande" target="_blank" :href="item.oUrl">${item.code}</a></td>
                     <td>${item.oDateCreated}</td>
                     <td>${item.oDate}</td>
                     <td><span v-html="item.TTC"></span><span> ${currency}</span></td>
-                    <td><a class="preview button" target="_blank" :href="item.oUrl">Voir commande</a></td>
                 </tr>
             </tbody>
 
