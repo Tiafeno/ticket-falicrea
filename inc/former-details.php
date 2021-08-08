@@ -14,7 +14,6 @@ final class FormerDetailsClass {
             add_action('wp_ajax_action_former_details', [&$this, 'get_former_trainings']);
             add_action('wp_ajax_action_get_product_details', [&$this, 'get_product_details']);
         });
-
     }
 
     public function add_former_meta_boxes() {
@@ -93,6 +92,10 @@ final class FormerDetailsClass {
         wp_enqueue_style('semantic-icon', plugin_dir_url(__FILE__) . '../assets/css/icon.css');
     }
 
+    /**
+     * Cette function permet d'afficher tous les formations d'un formateur spécifié
+     * dans une requete HTTP
+     */
     public function get_former_trainings() {
         global $wpdb;
         if (!isset($_POST['former_id'])) {
@@ -100,11 +103,13 @@ final class FormerDetailsClass {
         }
         $former_id = intval($_POST['former_id']);
         $responses = [];
+        // Récuperer tous les produits ou formation d'un formateur
         $sql = "SELECT post.ID, post.post_title, meta.meta_value as former_id FROM {$wpdb->posts} as post 
 JOIN {$wpdb->postmeta} as meta ON (meta.post_id = post.ID)
 WHERE post.post_type = %s AND meta.meta_value LIKE %s AND meta.meta_key = %s";
         $prepare = $wpdb->prepare($sql, 'product', $former_id, 'former' );
         $products = $wpdb->get_results($prepare);
+        // Envoyer une tableau vide, s'il y a aucune formation
         if (empty($products)) wp_send_json_success([]);
         // Request params
         $request = new WP_REST_Request();
@@ -120,7 +125,9 @@ WHERE post.post_type = %s AND meta.meta_value LIKE %s AND meta.meta_key = %s";
         wp_send_json_success($responses);
     }
 
-
+    /**
+     * Recuperer tous les commandes d'un produit
+     */
     public function get_product_details() {
         global $wpdb;
         $RESPONSES = [];
@@ -131,6 +138,26 @@ WHERE post.post_type = %s AND meta.meta_value LIKE %s AND meta.meta_key = %s";
         // Define HERE the orders status to include in  <==  <==  <==  <==  <==  <==  <==
         $orders_statuses = "'wc-completed', 'wc-processing', 'wc-on-hold'";
 
+        // Create filters by date
+        $filter = '';
+        if (isset($_POST['filter'])) {
+            $date_string = $_POST['filter'];
+            $date_arr = explode('|', $date_string);
+            if (is_array($date_arr)) {
+                $month_resp = $date_arr[0];
+                $year_resp = $date_arr[1];
+                $month = ('0' === $month_resp || empty($month_resp)) ? 0 : intval($month_resp);
+                $year = ('0' === $year_resp || empty($year_resp)) ? 0 : intval($year_resp);
+                if (0 !== $month || 0 !== $year) {
+                    $month_begin = ($year && 0 === $month) ? '01' : $month;
+                    $month_end = ($year && 0 === $month) ? '12' : $month;
+                    $begin_date   = gmdate( 'Y-m-d H:i:s', strtotime( "$year-$month_begin-01" ) );
+                    $end_date = gmdate( 'Y-m-d H:i:s', strtotime( "$year-$month_end-31" ) );
+                    $filter = sprintf('AND p.post_date BETWEEN \'%s\' AND \'%s\' ', $begin_date, $end_date);
+                }
+            }
+        }
+
         # Get All defined statuses Orders IDs for a defined product ID (or variation ID)
         $results = $wpdb->get_col( "
         SELECT DISTINCT woi.order_id
@@ -140,6 +167,7 @@ WHERE post.post_type = %s AND meta.meta_value LIKE %s AND meta.meta_key = %s";
         WHERE  woi.order_item_id = woim.order_item_id
         AND woi.order_id = p.ID
         AND p.post_status IN ( $orders_statuses )
+          $filter
         AND woim.meta_key IN ( '_product_id', '_variation_id' )
         AND woim.meta_value LIKE '$product_id'
         ORDER BY woi.order_item_id DESC");
@@ -153,25 +181,39 @@ WHERE post.post_type = %s AND meta.meta_value LIKE %s AND meta.meta_key = %s";
         // Get all order for his product
         foreach ($results as $index => $order_id) {
             $totalTTC = 0;
+            $customer_billing = new stdClass();
             $order_id = intval($order_id);
             $order = wc_get_order($order_id);
-
             $items = $order->get_items();
             foreach ( $items as $item ) {
                 $data = $item->get_data();
                 if (intval($product_id) !== intval($data['product_id'])) continue;
                 $totalTTC += ($data['total'] + $data['total_tax']);
             }
-
-            $customer_id = $order->get_customer_id();
-            $customer_controller = new WC_REST_Customers_V1_Controller();
-            $customer_response = $customer_controller->prepare_item_for_response(new WC_Customer($customer_id), $request);
-
+//            $customer_id = $order->get_customer_id();
+//            if (0 !== $customer_id || $customer_id) {
+//                $customer_controller = new WC_REST_Customers_V1_Controller();
+//                $customer_response = $customer_controller->prepare_item_for_response(new WC_Customer($customer_id), $request);
+//                $customer_data = $customer_response->data;
+//            } else {
+//                $customer_data = $order->bill
+//            }
+            $props = ['phone', 'city', 'country', 'email', 'postcode'];
+            $customer_billing->full_name = $order->get_formatted_billing_full_name();
+            $customer_billing->full_address = $order->get_formatted_billing_address();
+            foreach ($props as $prop) {
+                $key_prop = 'get_billing_' . $prop;
+                $customer_billing->{$prop} = $order->{$key_prop}();
+            }
+            $date_complete = $order->get_date_completed();
+            $date_created = $order->get_date_created();
             $RESPONSES[] = [
-                'totalTTC' => $totalTTC,
+                'TTC' => $totalTTC,
                 'code' => $this->get_order_ticket($order_id),
-                'order_url' => $order->get_edit_order_url(),
-                'customer' => $customer_response->data
+                'oDateCreated' => $date_created->format('M d Y'),
+                'oDate' => $date_complete->format('M d Y'),
+                'oUrl' => $order->get_edit_order_url(),
+                'customer' => $customer_billing
             ];
         }
 

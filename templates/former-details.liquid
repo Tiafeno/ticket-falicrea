@@ -6,7 +6,8 @@
 
 <script type="text/x-template" id="details">
     <div class="former-details">
-        <table class="ui compact celled definition table">
+        <div v-if="loading" class="text-center"><p>Chargement en cours...</p></div>
+        <table class="ui compact celled definition table" v-if="!loading && products.length > 0">
             <thead>
                 <tr>
                     <th></th>
@@ -62,46 +63,60 @@
         <div class="ui medium header" v-if="Product !== null">
             ${Product.title.rendered}
         </div>
-        <table class="ui compact celled definition table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Client</th>
-                    <th>Code</th>
-                    <th>Prix</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
 
-            <tbody>
-                <tr v-for="item in items">
+        <table class="ui compact celled definition table">
+                <tr>
                     <td class="collapsing">
                         <div class="ui fitted slider checkbox">
                             <form submit="return false" novalidate>
                                 <select name="month" v-model="filters.month">
-                                    <option value="">Mois</option>
-                                    <option v-for="(month, index) in Month" :value="index"> ${month} </option>
+                                    <option :value="0">Mois</option>
+                                    <option v-for="(month, index) in Month" :value="index + 1"> ${month} </option>
                                 </select>
 
-                                <select name="year" v-model="filters.month">
-                                    <option value="">Année</option>
-                                    <option v-for="(year, index) in Years" :value="index"> ${year} </option>
+                                <select name="year" v-model="filters.year">
+                                    <option :value="0">Année</option>
+                                    <option v-for="(year, index) in Years" :value="year"> ${year} </option>
                                 </select>
                                 <button type="button" @click="filterDate($event)" class="ui small button">Trouver</button>
                             </form>
                         </div>
                     </td>
-                    <td><b>${item.customer.first_name} ${item.customer.last_name}</b> - <i>${item.customer.email}</i></td>
+                </tr>
+        </table>
+
+        <div v-if="loading" class="text-center"><p>Chargement en cours...</p></div>
+        <div v-if="!loading && items.length ===0" class="text-center"><p>Aucun commande pour l'instant</p></div>
+
+        <table class="ui compact celled definition table" v-if="!loading && items.length > 0">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Code</th>
+                    <th>Date de commande</th>
+                    <th>Date de livraison</th>
+                    <th>Prix</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% comment %} for item {% endcomment %}
+                <tr v-for="item in items">
+                    <td><b>${item.customer.full_name}</b> - <i>${item.customer.email}</i></td>
                     <td>${item.code}</td>
-                    <td><span v-html="item.totalTTC"></span><span> ${currency}</span></td>
-                    <td><a class="preview button" target="_blank" :href="item.order_url">Voir commande</a></td>
+                    <td>${item.oDateCreated}</td>
+                    <td>${item.oDate}</td>
+                    <td><span v-html="item.TTC"></span><span> ${currency}</span></td>
+                    <td><a class="preview button" target="_blank" :href="item.oUrl">Voir commande</a></td>
                 </tr>
             </tbody>
 
             <tfoot class="full-width">
                 <tr>
                     <th></th>
-                    <th colspan="4">
+                    <th colspan="5">
                         <div class="ui right floated small secondary  button">
                             ${TotalTTC} ${currency}
                         </div>
