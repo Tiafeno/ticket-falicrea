@@ -89,6 +89,13 @@
                         this.Product = lodash.clone(prod);
                     });
                 },
+                exportToExcel: function (type = 'xlsx', fn, dl) {
+                    const elt = document.getElementById('order-complete-details');
+                    const wb = XLSX.utils.table_to_book(elt, { sheet: "sheet1" });
+                    return dl ?
+                        XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }) :
+                        XLSX.writeFile(wb, fn || ( this.Product.title.rendered + '.' + (type || 'xlsx')));
+                },
                 filterDate: function (evt) {
                     evt.preventDefault();
                     this.initComponent();

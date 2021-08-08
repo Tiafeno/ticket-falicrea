@@ -79,6 +79,7 @@
                                     <option v-for="(year, index) in Years" :value="year"> ${year} </option>
                                 </select>
                                 <button type="button" @click="filterDate($event)" class="ui small button">Trouver</button>
+                                <button type="button" @click="exportToExcel('xlsx')" class="ui small button">Exporter vers Excel</button>
                             </form>
                         </div>
                     </td>
@@ -88,7 +89,7 @@
         <div v-if="loading" class="text-center"><p>Chargement en cours...</p></div>
         <div v-if="!loading && items.length ===0" class="text-center"><p>Aucun commande pour l'instant</p></div>
 
-        <table class="ui compact celled definition table" v-if="!loading && items.length > 0">
+        <table class="ui compact celled definition table" id="order-complete-details" v-if="!loading && items.length > 0">
             <thead>
                 <tr>
                     <th>Client</th>
@@ -115,13 +116,14 @@
 
             <tfoot class="full-width">
                 <tr>
-                    <th></th>
-                    <th colspan="5">
-                        <div class="ui right floated small secondary  button">
-                            ${TotalTTC} ${currency}
-                        </div>
+                    <th colspan="4">
                         <div class="ui small button">
                             TOTAL TTC
+                        </div>
+                    </th>
+                    <th colspan="1">
+                        <div class="ui right floated small secondary  button">
+                            ${TotalTTC} ${currency}
                         </div>
                     </th>
                 </tr>

@@ -74,10 +74,11 @@ final class FormerDetailsClass {
     public function enqueue_scripts() {
         global $post;
         wp_register_script('axios', plugin_dir_url(__FILE__) . '../assets/js/axios.min.js', [], null, true);
+        wp_register_script('xlsx', 'https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js', [], null, true);
         wp_register_script('vue', plugin_dir_url(__FILE__) . '../assets/js/vue.js', ['jquery'], null, true);
         wp_register_script('vue-router', plugin_dir_url(__FILE__) . '../assets/js/vue-router.js', ['vue'], null, true);
         wp_register_script('former-details', plugin_dir_url(__FILE__) . '../assets/js/former-details.js',
-            ['vue', 'vue-router', 'axios', 'lodash', 'wp-api'], null, true);
+            ['vue', 'vue-router', 'axios', 'lodash', 'wp-api', 'xlsx'], null, true);
         wp_localize_script('former-details', 'apiSettings', [
             'ajaxurl' => admin_url('admin-ajax.php'),
             'former_id' => $post->ID,
