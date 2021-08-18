@@ -4,55 +4,85 @@
     </div>
 </script>
 
+<script type="text/x-template" id="filter-by-date">
+    <form submit="return false" novalidate>
+        <table class="ui compact celled definition table">
+                <tr>
+                    <td class="collapsing">
+                        <div class="ui fitted slider checkbox">
+                            <select name="month" v-model="formInputs.month">
+                                <option :value="0">Mois</option>
+                                <option v-for="(month, index) in Month" :value="index + 1"> ${month} </option>
+                            </select>
+
+                            <select name="year" v-model="formInputs.year">
+                                <option :value="0">Année</option>
+                                <option v-for="year in Years" :value="year"> ${year} </option>
+                            </select>
+                         </div>
+                    </td>
+                    <td>
+                        <button type="button" @click="findTraining" class="ui small button">Trouver</button>
+                        <button type="button" @click="exportToExcel('xlsx')" class="ui secondary small button">Exporter vers Excel</button>
+                    </td>
+                </tr>
+        </table>
+    </form>
+</script>
+
 <script type="text/x-template" id="details">
     <div class="former-details">
+        <comp-filter-date @filter="filterDate" ></comp-filter-date>
         <div v-if="loading" class="text-center"><p>Chargement en cours...</p></div>
-        <table class="ui compact celled definition table" v-if="!loading && products.length > 0">
+        <table class="ui compact celled table" id="xls-downloaded" v-if="!loading && products.length > 0">
             <thead>
                 <tr>
-                    <th></th>
                     <th>Designation</th>
-                    <th>SKU</th>
-                    <th>Prix Unitaire</th>
-                    <th>Action</th>
+                    <th>Ref</th>
+                    <th>P.U</th>
+                    <th>Total TTC</th>
+                    <th>#</th>
                 </tr>
             </thead>
 
             <tbody>
-                <tr v-for="product in products" :key="product.id">
-                    <td class="collapsing">
-                        <div class="ui fitted slider checkbox">
-                            <input type="checkbox"> <label></label>
-                        </div>
-                    </td>
-                    <td>${product.name}</td>
-                    <td>${product.sku}</td>
-                    <td v-html="product.price_html"></td>
+                <tr v-for="product in products" :key="product.p.id">
+                    <td>${product.p.name}</td>
+                    <td>${product.p.sku}</td>
+                    <td v-html="product.p.price_html"></td>
                     <td>
-                        <router-link class="ui small button" :to="{name: 'TrainingDetails', params: {id: product.id}}">Details</router-link>
+                        <div class="ui label">
+                            <span  v-html="product.ttf_format"></span>
+                        </div>
+                        {% comment %}<div class="ui label">
+                            <div class="detail" v-for="id in product.order_ids">
+                                <a class="" :href="'/wp-admin/post.php?post=' + id + '&action=edit'" target="_blank">#${id}</a>
+                            </div>
+                        </div>{% endcomment %}
+
+                    </td>
+                    <td>
+                        <router-link class="ui small button" :to="{name: 'TrainingDetails', params: {id: product.p.id}}">Details</router-link>
                     </td>
                 </tr>
             </tbody>
-
-            <tfoot class="full-width">
+            <tfoot class="full-width">  
                 <tr>
-                    <th></th>
-                    <th colspan="4">
-                        <a :href="postNew" class="ui right floated small secondary labeled icon button">
-                            <i class="user icon"></i> Ajouter une formation
-                        </a>
-                        <div class="ui small button">
-                            Approve
-                        </div>
-                        <div class="ui small  disabled button">
-                            Approve All
+                    <th colspan="3">
+                        <div class="ui small ">
+                            <span class="">TOTAL TTC</span>
                         </div>
                     </th>
+                    <th><a class="ui red tag label">${ total } ${ currency }</a></th>
                 </tr>
             </tfoot>
+
         </table>
+        
     </div>
 </script>
+
+
 <script type="text/x-template" id="training-details">
     <div class="former-details">
         <div class=""></div>
@@ -63,33 +93,11 @@
         <div class="ui medium header" v-if="Product !== null">
             ${Product.title.rendered}
         </div>
-
-        <table class="ui compact celled definition table">
-                <tr>
-                    <td class="collapsing">
-                        <div class="ui fitted slider checkbox">
-                            <form submit="return false" novalidate>
-                                <select name="month" v-model="filters.month">
-                                    <option :value="0">Mois</option>
-                                    <option v-for="(month, index) in Month" :value="index + 1"> ${month} </option>
-                                </select>
-
-                                <select name="year" v-model="filters.year">
-                                    <option :value="0">Année</option>
-                                    <option v-for="(year, index) in Years" :value="year"> ${year} </option>
-                                </select>
-                                <button type="button" @click="filterDate($event)" class="ui small button">Trouver</button>
-                                <button type="button" @click="exportToExcel('xlsx')" class="ui secondary small button">Exporter vers Excel</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-        </table>
-
+        <comp-filter-date @filter="filterDate"></comp-filter-date>
         <div v-if="loading" class="text-center"><p>Chargement en cours...</p></div>
         <div v-if="!loading && items.length ===0" class="text-center"><p>Aucun commande pour l'instant</p></div>
 
-        <table class="ui compact celled definition table" id="order-complete-details" v-if="!loading && items.length > 0">
+        <table class="ui compact celled definition table" id="xls-downloaded" v-if="!loading && items.length > 0">
             <thead>
                 <tr>
                     <th>Client</th>
