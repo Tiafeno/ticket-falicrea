@@ -33,7 +33,10 @@
 <script type="text/x-template" id="details">
     <div class="former-details">
         <comp-filter-date @filter="filterDate" ></comp-filter-date>
-        <div v-if="loading" class="text-center"><p>Chargement en cours...</p></div>
+        <div v-if="loading" class="text-center"><p style="text-align: center"Code>Chargement en cours...</p></div>
+        <div v-if="!loading && products.length ===0" class="text-center">
+            <p style="text-align: center">Aucun commande trouver</p>
+        </div>
         <table class="ui compact celled table" id="xls-downloaded" v-if="!loading && products.length > 0">
             <thead>
                 <tr>
@@ -69,11 +72,14 @@
             <tfoot class="full-width">  
                 <tr>
                     <th colspan="3">
-                        <div class="ui small ">
-                            <span class="">TOTAL TTC</span>
-                        </div>
+                        TOTAL TTC
                     </th>
-                    <th><a class="ui red tag label">${ total } ${ currency }</a></th>
+                    <th>
+                    <a class="ui teal image label">
+                        ${ total }
+                        <div class="detail"> ${ currency }</div>
+                    </a>
+                    </th>
                 </tr>
             </tfoot>
 

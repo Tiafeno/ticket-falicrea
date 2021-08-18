@@ -25,7 +25,7 @@ final class FormerDetailsClass
             add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
             add_meta_box(
                 'former-details',
-                __('Former Details', 'ticket-falicrea'),
+                __('Details de vente', 'ticket-falicrea'),
                 [&$this, 'former_meta_box_callback'],
                 'former'
             );
@@ -145,9 +145,7 @@ WHERE post.post_type = %s AND meta.meta_value LIKE %s AND meta.meta_key = %s";
         // Request params
         $request = new WP_REST_Request();
         $request->set_param('context', 'edit');
-
         $wpdb->flush();
-
         $product_ids = array_map(function ($product) {
             return intval($product->ID);
         }, $products);
@@ -182,16 +180,14 @@ WHERE post.post_type = %s AND meta.meta_value LIKE %s AND meta.meta_key = %s";
                 }
                 $data_response->order_ids[] = (int)$order_id;
             }
-
+            // Ne pas afficher les produit qui n'on pas de vente
+            if (0 === $total) continue;
             $product_controller = new WC_REST_Products_V1_Controller();
-
             $product = wc_get_product($product_id);
             $response = $product_controller->prepare_item_for_response( $product , $request);
-
             $data_response->p = $response->data;
             $data_response->ttf_format = wc_price($total);
             $data_response->ttf = $total;
-
             $responses[] = $data_response;
         }
 
