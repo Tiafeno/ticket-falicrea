@@ -4,7 +4,7 @@
 Plugin Name: Ticket Formation
 Plugin URI: https://falicrea.net
 Description: ...
-Version: 1.3
+Version: 1.4
 Author: Falicrea
 Author URI: https://falicrea.net
 License: A "Slug" license name e.g. GPL2
