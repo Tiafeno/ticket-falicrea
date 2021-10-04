@@ -143,7 +143,7 @@ class TicketSecurity
     public function thank_you(int $order_id)
     {
         $order = wc_get_order($order_id); // return WP_Order
-        $paymethod = $order->payment_method_title;
+        $paymethod = $order->payment_method_title();
         $orderstat = $order->get_status();
         if ($orderstat == 'completed') {
             // Create ticket security
